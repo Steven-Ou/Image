@@ -4,7 +4,7 @@ from PyPDF2 import PdfReader, PdfWriter, PageObject
 import os
 
 def create_wraparound_cover(front_cover_path, output_pdf_path, back_color="#1a0b2e"):
-    target_width = int(17.368 * 300)
+    target_width = int(17.480 * 300)
     target_height = int(11.250 * 300)
     wraparound = Image.new('RGB', (target_width, target_height), back_color)
 
