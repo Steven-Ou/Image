@@ -77,7 +77,7 @@ create_wraparound_cover('front_cover.jpg', 'kdp_wraparound_cover_final.pdf')
 format_kdp_interior('interior_draft.pdf', 'interior_structured_temp.pdf')
 
 # 3. Flatten the structured interior to bypass font errors
-flatten_kdp_manuscript('interior_structured_temp.pdf', 'kdp_interior_final.pdf')
+#flatten_kdp_manuscript('interior_structured_temp.pdf', 'kdp_interior_final.pdf')
 
 # 4. Clean up the temporary structured file
 if os.path.exists('interior_structured_temp.pdf'):
