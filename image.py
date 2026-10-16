@@ -8,28 +8,41 @@ def create_wraparound_cover(front_cover_path, output_pdf_path, back_color="#1a0b
     target_height = int(11.250 * 300) # 3375 pixels
 
     # Create the full canvas with the solid background color (back cover + spine)
+    # Acting as a seamless background bleed so safety borders don't render as white
     wraparound = Image.new('RGB', (target_width, target_height), back_color)
 
     try:
         # Load the front cover
         front_cover = Image.open(front_cover_path).convert('RGB')
         
-        # The front cover occupies the right side of the wraparound.
-        # Standard front cover with bleed is 8.625" x 11.25" (2588 x 3375 pixels).
-        front_width = int(8.625 * 300)
+        # Original width with bleed is 8.625" x 11.25"
+        front_width_original = int(8.625 * 300) # 2588 pixels
         
-        # Resize front cover to fit KDP's exact right-side dimensions
-        front_cover = front_cover.resize((front_width, target_height), Image.Resampling.LANCZOS)
+        # RED ZONE FIX: Downscale the front cover slightly (e.g. 92%)
+        # and wrap it inside the dark theme. This keeps text and characters
+        # well clear of KDP’s red dotted cutoff margins.
+        safe_scale_factor = 0.92
+        scaled_width = int(front_width_original * safe_scale_factor)
+        scaled_height = int(target_height * safe_scale_factor)
         
-        # Calculate the X coordinate to paste the front cover (flush right)
-        paste_x = target_width - front_width
+        # Resize to safe, shrunken dimensions
+        front_cover_safe = front_cover.resize((scaled_width, scaled_height), Image.Resampling.LANCZOS)
         
-        # Paste the front cover onto the right side of the canvas
-        wraparound.paste(front_cover, (paste_x, 0))
+        # Set alignment padding inside the wraparound.
+        # Shift slightly left from the absolute edge (x-pad) and center vertically (y-pad).
+        padding_right = 110 # Pulls the artwork inward from the outer right trim
+        padding_top = (target_height - scaled_height) // 2 # Centers top-to-bottom
+        
+        # paste_x anchors the front cover's left edge on the canvas
+        paste_x = target_width - scaled_width - padding_right
+        paste_y = padding_top
+        
+        # Paste the safely sized front cover on the right side of the canvas
+        wraparound.paste(front_cover_safe, (paste_x, paste_y))
         
         # Save the final file as a print-ready PDF
         wraparound.save(output_pdf_path, "PDF", resolution=300.0)
-        print(f"Success! Wraparound cover saved to {output_pdf_path}")
+        print(f"Success! Margin-adjusted wraparound cover saved to {output_pdf_path}")
         
     except FileNotFoundError:
         print(f"Error: Could not find the front cover image at '{front_cover_path}'")
@@ -57,7 +70,7 @@ def flatten_kdp_manuscript(input_path, output_path, dpi=300):
         
     except Exception as e:
         print(f"Conversion failed: {e}")
-        
+
 # Run the pipeline
-# Replace 'front_cover.jpg' with your actual filename
+# Replace 'front_cover.jpg' with your actual file name
 create_wraparound_cover('front_cover.jpg', 'kdp_wraparound_cover.pdf', back_color='#1a0b2e')
